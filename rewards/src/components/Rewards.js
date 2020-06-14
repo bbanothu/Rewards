@@ -3,84 +3,17 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { connect, useDispatch } from "react-redux";
 import actions from '../actions/saveState'
 import store from '../Store/myStore'
-const uniqueId = require('lodash.uniqueid');
-
+import {
+  reorder,
+  moveFromCategories,
+  moveFromRewards,
+  getItemStyle,
+  getListStyle,
+  deleteReward
+}
+  from './RewardsFunctions'
 
 // a little function to help us with reordering the result
-const reorder = (list, startIndex, endIndex) => {
-  const result = Array.from(list);
-  const [removed] = result.splice(startIndex, 1);
-  result.splice(endIndex, 0, removed);
-  return result;
-};
-
-const moveFromCategories = (source, destination, droppableSource, droppableDestination) => {
-  let returnSource = [];
-  const sourceClone = Array.from(source);
-  const destClone = Array.from(destination);
-  const [removed] = sourceClone.splice(droppableSource.index, 1);
-  if (checkContains(destClone, removed)) {
-    returnSource = Array.from(source)
-  } else {
-    destClone.splice(droppableDestination.index, 0, removed);
-    returnSource = sourceClone;
-  }
-  const result = [];
-  result.push([droppableSource.droppableId, returnSource]);
-  result.push([droppableDestination.droppableId, destClone]);
-  return result;
-};
-
-
-const moveFromRewards = (source, destination, droppableSource, droppableDestination) => {
-  const sourceClone = Array.from(source);
-  const destClone = Array.from(destination);
-  const [removed] = sourceClone.splice(droppableSource.index, 1);
-  const newItem = { id: uniqueId(removed.id), content: removed.content }
-  if (checkContains(destClone, newItem)) {
-  } else {
-    destClone.splice(droppableDestination.index, 0, newItem);
-  }
-  const result = [];
-  result.push([droppableDestination.droppableId, destClone]);
-  return result;
-};
-
-const checkContains = (destinationArray, Value) => {
-  for (var i = 0; i < destinationArray.length; i++) {
-    if (destinationArray[i].content === Value.content) {
-      return true;
-    }
-  }
-  return false;
-}
-const grid = 8;
-
-const getItemStyle = (isDragging, draggableStyle) => ({
-  userSelect: 'none',
-  padding: grid * 2,
-  margin: `0 0 ${grid}px 0`,
-  borderRadius: "10px",
-  background: isDragging ? 'lightgreen' : 'white',
-  ...draggableStyle,
-  width: "100%",
-  maxWidth: "100px"
-});
-
-const getListStyle = isDraggingOver => ({
-  background: isDraggingOver ? 'lightblue' : 'lightgrey',
-  borderRadius: "10px",
-  padding: grid,
-  width: "100%",
-  height: "400px",
-  textAlign: "center"
-});
-
-const deleteReward = (Category, index) => {
-  const sourceClone = Array.from(Category);
-  sourceClone.splice(index, 1);
-  return sourceClone;
-};
 
 class Rewards extends Component {
   constructor(props) {
@@ -98,15 +31,6 @@ class Rewards extends Component {
     this.saveState = this.saveState.bind(this);
     this.undoState = this.undoState.bind(this);
   }
-
-  id2List = {
-    Rewards: 'Rewards',
-    C1: 'C1',
-    C2: 'C2',
-    C3: 'C3',
-    C4: 'C4',
-    C5: 'C5',
-  };
 
   saveState = () => {
     let temp = [];
@@ -198,6 +122,16 @@ class Rewards extends Component {
   };
 
   getList = id => this.state[this.id2List[id]];
+
+  id2List = {
+    Rewards: 'Rewards',
+    C1: 'C1',
+    C2: 'C2',
+    C3: 'C3',
+    C4: 'C4',
+    C5: 'C5',
+  };
+
   onDragEnd = result => {
     const { source, destination } = result;
     // dropped outside the list
