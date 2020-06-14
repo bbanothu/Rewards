@@ -2,6 +2,7 @@ import { createStore } from 'redux';
 import actions from '../actions/saveState'
 import reducer from '../reducers/initStore'
 
+// Creating the default store values
 var uniqueId = require('lodash.uniqueid');
 let State = [];
 let rewardsArray = [];
@@ -22,6 +23,7 @@ State.push(C3);
 State.push(C4);
 State.push(C5);
 
+// init store
 const store = createStore(reducer)
 store.dispatch(actions(State))
 export default store;

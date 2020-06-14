@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { connect, useDispatch } from "react-redux";
 import actions from '../actions/saveState'
-import store from '../Store/myStore'
+import store from '../store/myStore'
+import DroppableRewards from './droppableRewards'
+import DroppableCategories from './droppableCategories'
 import {
   reorder,
   moveFromCategories,
@@ -14,6 +16,7 @@ import {
   from './RewardsFunctions'
 
 // a little function to help us with reordering the result
+
 
 class Rewards extends Component {
   constructor(props) {
@@ -32,6 +35,13 @@ class Rewards extends Component {
     this.undoState = this.undoState.bind(this);
   }
 
+  // Used for child components
+  updateRewards = (categoryName, value) => {
+    this.setState({
+      [categoryName]: value
+    }, this.updateHistory);
+  }
+  // Used to update redux store
   saveState = () => {
     let temp = [];
     temp.push(this.state.Rewards);
@@ -46,6 +56,7 @@ class Rewards extends Component {
     console.log(store.getState());
   };
 
+  // Used to undo state
   undoState = () => {
     let tempLocation = this.state.location;
     if (tempLocation > 0) {
@@ -64,6 +75,7 @@ class Rewards extends Component {
     }
   };
 
+  // Used to redo state
   redoState = () => {
     let tempLocation = this.state.location;
     if (tempLocation < this.state.history.length - 1) {
@@ -82,9 +94,7 @@ class Rewards extends Component {
     }
   };
 
-
-
-  // Used for undo and redo
+  // Used for undo and redo to properly keep track of state
   updateHistory = () => {
     if (this.state.location < this.state.history.length - 1) {
       let tempLocation = this.state.location;
@@ -121,8 +131,10 @@ class Rewards extends Component {
     }
   };
 
+  // Helper funtion to get the correct state
   getList = id => this.state[this.id2List[id]];
 
+  // Helper Array to be used for getList
   id2List = {
     Rewards: 'Rewards',
     C1: 'C1',
@@ -132,6 +144,7 @@ class Rewards extends Component {
     C5: 'C5',
   };
 
+  // Used for the core dragging feature
   onDragEnd = result => {
     const { source, destination } = result;
     // dropped outside the list
@@ -189,30 +202,7 @@ class Rewards extends Component {
                     <p style={{ fontWeight: "bold", textAlign: "center" }}> Types </p>
                     <Droppable droppableId="Rewards">
                       {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          style={getListStyle(snapshot.isDraggingOver)}>
-                          {this.state.Rewards.map((item, index) => (
-                            <Draggable
-                              key={item.id}
-                              draggableId={item.id}
-                              index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  style={getItemStyle(
-                                    snapshot.isDragging,
-                                    provided.draggableProps.style
-                                  )}>
-                                  {item.content}
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
+                        <DroppableRewards Rewards={this.state.Rewards} provided={provided} snapshot={snapshot} />
                       )}
                     </Droppable>
                   </div>
@@ -227,42 +217,8 @@ class Rewards extends Component {
                     <p style={{ fontWeight: "bold", textAlign: "center" }}> C1 </p>
                     <Droppable droppableId="C1" >
                       {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          style={getListStyle(snapshot.isDraggingOver)}>
-                          {this.state.C1.map((item, index) => (
-                            <Draggable
-                              key={item.id}
-                              draggableId={item.id}
-                              index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  style={
-                                    getItemStyle(
-                                      snapshot.isDragging,
-                                      provided.draggableProps.style
-                                    )}>
-                                  {item.content}
-                                  <button
-                                    className="close" aria-label="Close"
-                                    type="button"
-                                    onClick={() => {
-                                      const tempValue = deleteReward(this.state.C1, index);
-                                      this.setState({
-                                        C1: tempValue
-                                      }, this.updateHistory);
-                                    }}
-                                  ><span aria-hidden="true">&times;</span>
-                                  </button>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
+                        <DroppableCategories Category={this.state.C1} categoryName={"C1"} provided={provided} snapshot={snapshot}
+                          updateRewards={this.updateRewards} />
                       )}
                     </Droppable>
                   </div>
@@ -270,165 +226,32 @@ class Rewards extends Component {
                     <p style={{ fontWeight: "bold", textAlign: "center" }}> C2 </p>
                     <Droppable droppableId="C2">
                       {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          style={getListStyle(snapshot.isDraggingOver)}>
-                          {this.state.C2.map((item, index) => (
-                            <Draggable
-                              key={item.id}
-                              draggableId={item.id}
-                              index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  style={getItemStyle(
-                                    snapshot.isDragging,
-                                    provided.draggableProps.style
-                                  )}>
-                                  {item.content}
-                                  <button
-                                    className="close" aria-label="Close"
-                                    type="button"
-                                    onClick={() => {
-                                      const tempValue = deleteReward(this.state.C2, index);
-                                      this.setState({
-                                        C2: tempValue
-                                      }, this.updateHistory);
-                                    }}
-                                  ><span aria-hidden="true">&times;</span>                                  </button>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
+                        <DroppableCategories Category={this.state.C2} categoryName={"C2"} provided={provided} snapshot={snapshot}
+                          updateRewards={this.updateRewards} />)}
                     </Droppable>
                   </div>
                   <div className="col-sm-2">
                     <p style={{ fontWeight: "bold", textAlign: "center" }}> C3 </p>
                     <Droppable droppableId="C3">
                       {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          style={getListStyle(snapshot.isDraggingOver)}>
-                          {this.state.C3.map((item, index) => (
-                            <Draggable
-                              key={item.id}
-                              draggableId={item.id}
-                              index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  style={getItemStyle(
-                                    snapshot.isDragging,
-                                    provided.draggableProps.style
-                                  )}>
-                                  {item.content}
-                                  <button
-                                    className="close" aria-label="Close"
-                                    type="button"
-                                    onClick={() => {
-                                      const tempValue = deleteReward(this.state.C3, index);
-                                      this.setState({
-                                        C3: tempValue
-                                      }, this.updateHistory);
-                                    }}
-                                  ><span aria-hidden="true">&times;</span>                                  </button>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
+                        <DroppableCategories Category={this.state.C3} categoryName={"C3"} provided={provided} snapshot={snapshot}
+                          updateRewards={this.updateRewards} />)}
                     </Droppable>
                   </div>
                   <div className="col-sm-2">
                     <p style={{ fontWeight: "bold", textAlign: "center" }}> C4 </p>
                     <Droppable droppableId="C4">
                       {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          style={getListStyle(snapshot.isDraggingOver)}>
-                          {this.state.C4.map((item, index) => (
-                            <Draggable
-                              key={item.id}
-                              draggableId={item.id}
-                              index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  style={getItemStyle(
-                                    snapshot.isDragging,
-                                    provided.draggableProps.style
-                                  )}>
-                                  {item.content}
-                                  <button
-                                    className="close" aria-label="Close"
-                                    type="button"
-                                    onClick={() => {
-                                      const tempValue = deleteReward(this.state.C4, index);
-                                      this.setState({
-                                        C4: tempValue
-                                      }, this.updateHistory);
-                                    }}
-                                  ><span aria-hidden="true">&times;</span>                                  </button>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
+                        <DroppableCategories Category={this.state.C4} categoryName={"C4"} provided={provided} snapshot={snapshot}
+                          updateRewards={this.updateRewards} />)}
                     </Droppable>
                   </div>
                   <div className="col-sm-2">
                     <p style={{ fontWeight: "bold", textAlign: "center" }}> C5 </p>
                     <Droppable droppableId="C5">
                       {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          style={getListStyle(snapshot.isDraggingOver)}>
-                          {this.state.C5.map((item, index) => (
-                            <Draggable
-                              key={item.id}
-                              draggableId={item.id}
-                              index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  style={getItemStyle(
-                                    snapshot.isDragging,
-                                    provided.draggableProps.style
-                                  )}>
-                                  {item.content}
-                                  <button
-                                    className="close" aria-label="Close"
-                                    type="button"
-                                    onClick={() => {
-                                      const tempValue = deleteReward(this.state.C5, index);
-                                      this.setState({
-                                        C5: tempValue
-                                      }, this.updateHistory);
-                                    }}
-                                  ><span aria-hidden="true">&times;</span>
-                                  </button>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
+                        <DroppableCategories Category={this.state.C5} categoryName={"C5"} provided={provided} snapshot={snapshot}
+                          updateRewards={this.updateRewards} />)}
                     </Droppable>
                   </div>
                   {/* <div className="col-sm-1"></div> */}

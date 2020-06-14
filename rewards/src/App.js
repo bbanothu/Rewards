@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Rewards from "./components/Rewards"
 import redirect from "./Redirect"
 import { Provider } from 'react-redux';
-import store from './Store/myStore'
+import store from './store/myStore'
 import "bootstrap/dist/css/bootstrap.min.css";
 
 // Entry point
