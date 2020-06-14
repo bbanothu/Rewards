@@ -1,20 +1,10 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { connect } from "react-redux";
-var uniqueId = require('lodash.uniqueid');
+import { connect, useDispatch } from "react-redux";
+import actions from '../actions/saveState'
+import store from '../Store/myStore'
+const uniqueId = require('lodash.uniqueid');
 
-// fake data generator
-const getItems = () => {
-  const returnArray = [];
-  returnArray.push({ id: uniqueId(`R-1`), content: `R1` });
-  returnArray.push({ id: uniqueId(`R-2`), content: `R2` });
-  returnArray.push({ id: uniqueId(`R-3`), content: `R3` });
-  returnArray.push({ id: uniqueId(`R-4`), content: `R4` });
-  returnArray.push({ id: uniqueId(`R-5`), content: `R5` });
-  return returnArray;
-
-};
 
 // a little function to help us with reordering the result
 const reorder = (list, startIndex, endIndex) => {
@@ -24,9 +14,6 @@ const reorder = (list, startIndex, endIndex) => {
   return result;
 };
 
-/**
- * Moves an item from one list to another list.
- */
 const moveFromCategories = (source, destination, droppableSource, droppableDestination) => {
   let returnSource = [];
   const sourceClone = Array.from(source);
@@ -61,7 +48,7 @@ const moveFromRewards = (source, destination, droppableSource, droppableDestinat
 
 const checkContains = (destinationArray, Value) => {
   for (var i = 0; i < destinationArray.length; i++) {
-    if (destinationArray[i].content == Value.content) {
+    if (destinationArray[i].content === Value.content) {
       return true;
     }
   }
@@ -76,41 +63,42 @@ const getItemStyle = (isDragging, draggableStyle) => ({
   borderRadius: "10px",
   background: isDragging ? 'lightgreen' : 'white',
   ...draggableStyle,
-  width: "80px"
+  width: "100%",
+  maxWidth: "100px"
 });
 
-const modify = (Category, index) => {
-  const sourceClone = Array.from(Category);
-  sourceClone.splice(index, 1);
-  return sourceClone;
-
-};
 const getListStyle = isDraggingOver => ({
   background: isDraggingOver ? 'lightblue' : 'lightgrey',
   borderRadius: "10px",
   padding: grid,
-  width: "110px",
-  height: "400px"
+  width: "100%",
+  height: "400px",
+  textAlign: "center"
 });
+
+const deleteReward = (Category, index) => {
+  const sourceClone = Array.from(Category);
+  sourceClone.splice(index, 1);
+  return sourceClone;
+};
 
 class Rewards extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      Rewards: getItems(),
-      C1: [],
-      C2: [],
-      C3: [],
-      C4: [],
-      C5: [],
+      location: 1,
+      history: [this.props.myState],
+      Rewards: this.props.myState[0],
+      C1: this.props.myState[1],
+      C2: this.props.myState[2],
+      C3: this.props.myState[3],
+      C4: this.props.myState[4],
+      C5: this.props.myState[5],
     };
+    this.saveState = this.saveState.bind(this);
+    this.undoState = this.undoState.bind(this);
   }
 
-  /**
-   * A semi-generic way to handle multiple lists. Matches
-   * the IDs of the droppable container to the names of the
-   * source arrays stored in the state.
-   */
   id2List = {
     Rewards: 'Rewards',
     C1: 'C1',
@@ -120,8 +108,96 @@ class Rewards extends Component {
     C5: 'C5',
   };
 
-  getList = id => this.state[this.id2List[id]];
+  saveState = () => {
+    let temp = [];
+    temp.push(this.state.Rewards);
+    temp.push(this.state.C1);
+    temp.push(this.state.C2);
+    temp.push(this.state.C3);
+    temp.push(this.state.C4);
+    temp.push(this.state.C5);
+    console.log(store.getState());
+    // I know this is an anti-pattern - temporary fix
+    store.dispatch(actions(temp));
+    console.log(store.getState());
+  };
 
+  undoState = () => {
+    let tempLocation = this.state.location;
+    if (tempLocation > 0) {
+      tempLocation--;
+      let previousState = this.state.history[tempLocation];
+      this.setState({
+
+        Rewards: previousState[0],
+        C1: previousState[1],
+        C2: previousState[2],
+        C3: previousState[3],
+        C4: previousState[4],
+        C5: previousState[5],
+        location: tempLocation
+      })
+    }
+  };
+
+  redoState = () => {
+    let tempLocation = this.state.location;
+    if (tempLocation < this.state.history.length - 1) {
+      tempLocation++;
+      let nextState = this.state.history[tempLocation];
+      this.setState({
+
+        Rewards: nextState[0],
+        C1: nextState[1],
+        C2: nextState[2],
+        C3: nextState[3],
+        C4: nextState[4],
+        C5: nextState[5],
+        location: tempLocation
+      })
+    }
+  };
+
+
+
+  // Used for undo and redo
+  updateHistory = () => {
+    if (this.state.location < this.state.history.length - 1) {
+      let tempLocation = this.state.location;
+      let totalHistory = this.state.history.splice(0, tempLocation);
+      let historyVal = []
+      historyVal.push(this.state.Rewards);
+      historyVal.push(this.state.C1);
+      historyVal.push(this.state.C2);
+      historyVal.push(this.state.C3);
+      historyVal.push(this.state.C4);
+      historyVal.push(this.state.C5);
+      totalHistory.push(historyVal);
+      tempLocation++;
+      this.setState({
+        history: totalHistory,
+        location: tempLocation
+      })
+    } else {
+      let tempLocation = this.state.location;
+      let totalHistory = this.state.history;
+      let historyVal = []
+      historyVal.push(this.state.Rewards);
+      historyVal.push(this.state.C1);
+      historyVal.push(this.state.C2);
+      historyVal.push(this.state.C3);
+      historyVal.push(this.state.C4);
+      historyVal.push(this.state.C5);
+      totalHistory.push(historyVal);
+      tempLocation++;
+      this.setState({
+        history: totalHistory,
+        location: tempLocation
+      })
+    }
+  };
+
+  getList = id => this.state[this.id2List[id]];
   onDragEnd = result => {
     const { source, destination } = result;
     // dropped outside the list
@@ -140,7 +216,7 @@ class Rewards extends Component {
       state = { [source.droppableId]: items };
       this.setState(state);
     } else {
-      if (source.droppableId == 'Rewards') {
+      if (source.droppableId === 'Rewards') {
         const result = moveFromRewards(
           this.getList(source.droppableId),
           this.getList(destination.droppableId),
@@ -149,7 +225,7 @@ class Rewards extends Component {
         );
         this.setState({
           [result[0][0]]: result[0][1]
-        });
+        }, this.updateHistory);
       } else {
         const result = moveFromCategories(
           this.getList(source.droppableId),
@@ -160,26 +236,23 @@ class Rewards extends Component {
         this.setState({
           [result[0][0]]: result[0][1],
           [result[1][0]]: result[1][1],
-        });
+        }, this.updateHistory);
       }
     }
   };
 
-  // Normally you would want to split things out into separate components.
-  // But in this example everything is just done in one place for simplicity
   render() {
-    const { myState } = this.props;
     return (
       <div className="container">
         <div className="shadow  bg-grey rounded mt-4 p-3 mb-5 ">
           <DragDropContext onDragEnd={this.onDragEnd}>
             <div className="row">
               <div className="col-sm-2">
-                <h2> Rewards </h2>
+                <h3 style={{ textAlign: "center" }}> Rewards </h3>
                 <hr />
                 <div className="row">
                   <div className="col-sm-12">
-                    <h3> Types </h3>
+                    <p style={{ fontWeight: "bold", textAlign: "center" }}> Types </p>
                     <Droppable droppableId="Rewards">
                       {(provided, snapshot) => (
                         <div
@@ -212,11 +285,12 @@ class Rewards extends Component {
                 </div>
               </div>
               <div className="col-sm-10">
-                <h2> Categories </h2>
+                <h3 style={{ textAlign: "center" }}> Categories </h3>
                 <hr />
                 <div className="row">
+                  {/* <div className="col-sm-1"></div> */}
                   <div className="col-sm-2">
-                    <h2> C1 </h2>
+                    <p style={{ fontWeight: "bold", textAlign: "center" }}> C1 </p>
                     <Droppable droppableId="C1" >
                       {(provided, snapshot) => (
                         <div
@@ -242,10 +316,10 @@ class Rewards extends Component {
                                     className="close" aria-label="Close"
                                     type="button"
                                     onClick={() => {
-                                      const tempValue = modify(this.state.C1, index);
+                                      const tempValue = deleteReward(this.state.C1, index);
                                       this.setState({
                                         C1: tempValue
-                                      });
+                                      }, this.updateHistory);
                                     }}
                                   ><span aria-hidden="true">&times;</span>
                                   </button>
@@ -259,7 +333,7 @@ class Rewards extends Component {
                     </Droppable>
                   </div>
                   <div className="col-sm-2">
-                    <h2> C2 </h2>
+                    <p style={{ fontWeight: "bold", textAlign: "center" }}> C2 </p>
                     <Droppable droppableId="C2">
                       {(provided, snapshot) => (
                         <div
@@ -284,10 +358,10 @@ class Rewards extends Component {
                                     className="close" aria-label="Close"
                                     type="button"
                                     onClick={() => {
-                                      const tempValue = modify(this.state.C2, index);
+                                      const tempValue = deleteReward(this.state.C2, index);
                                       this.setState({
                                         C2: tempValue
-                                      });
+                                      }, this.updateHistory);
                                     }}
                                   ><span aria-hidden="true">&times;</span>                                  </button>
                                 </div>
@@ -300,7 +374,7 @@ class Rewards extends Component {
                     </Droppable>
                   </div>
                   <div className="col-sm-2">
-                    <h2> C3 </h2>
+                    <p style={{ fontWeight: "bold", textAlign: "center" }}> C3 </p>
                     <Droppable droppableId="C3">
                       {(provided, snapshot) => (
                         <div
@@ -325,10 +399,10 @@ class Rewards extends Component {
                                     className="close" aria-label="Close"
                                     type="button"
                                     onClick={() => {
-                                      const tempValue = modify(this.state.C3, index);
+                                      const tempValue = deleteReward(this.state.C3, index);
                                       this.setState({
                                         C3: tempValue
-                                      });
+                                      }, this.updateHistory);
                                     }}
                                   ><span aria-hidden="true">&times;</span>                                  </button>
                                 </div>
@@ -341,7 +415,7 @@ class Rewards extends Component {
                     </Droppable>
                   </div>
                   <div className="col-sm-2">
-                    <h2> C4 </h2>
+                    <p style={{ fontWeight: "bold", textAlign: "center" }}> C4 </p>
                     <Droppable droppableId="C4">
                       {(provided, snapshot) => (
                         <div
@@ -366,10 +440,10 @@ class Rewards extends Component {
                                     className="close" aria-label="Close"
                                     type="button"
                                     onClick={() => {
-                                      const tempValue = modify(this.state.C4, index);
+                                      const tempValue = deleteReward(this.state.C4, index);
                                       this.setState({
                                         C4: tempValue
-                                      });
+                                      }, this.updateHistory);
                                     }}
                                   ><span aria-hidden="true">&times;</span>                                  </button>
                                 </div>
@@ -382,7 +456,7 @@ class Rewards extends Component {
                     </Droppable>
                   </div>
                   <div className="col-sm-2">
-                    <h2> C5 </h2>
+                    <p style={{ fontWeight: "bold", textAlign: "center" }}> C5 </p>
                     <Droppable droppableId="C5">
                       {(provided, snapshot) => (
                         <div
@@ -407,10 +481,10 @@ class Rewards extends Component {
                                     className="close" aria-label="Close"
                                     type="button"
                                     onClick={() => {
-                                      const tempValue = modify(this.state.C5, index);
+                                      const tempValue = deleteReward(this.state.C5, index);
                                       this.setState({
                                         C5: tempValue
-                                      });
+                                      }, this.updateHistory);
                                     }}
                                   ><span aria-hidden="true">&times;</span>
                                   </button>
@@ -423,10 +497,25 @@ class Rewards extends Component {
                       )}
                     </Droppable>
                   </div>
+                  {/* <div className="col-sm-1"></div> */}
                 </div>
               </div>
             </div>
           </DragDropContext >
+        </div>
+        <div className="row" style={{ float: "right" }}>
+          <button
+            type="button"
+            onClick={this.saveState}
+          ><i className="fa fa-save"></i></button>
+          <button
+            type="button"
+            onClick={this.undoState}
+          ><i className="fa fa-undo"></i></button>
+          <button
+            type="button"
+            onClick={this.redoState}
+          ><i className="fa fa-repeat"></i></button>
         </div>
       </div>
     );
@@ -438,5 +527,5 @@ function mapStateToProps(state) {
     myState: state,
   };
 }
-// Put the thing into the DOM!
+
 export default (connect(mapStateToProps)(Rewards));

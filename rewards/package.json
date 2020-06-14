@@ -7,6 +7,7 @@
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
     "bootstrap": "^4.5.0",
+    "enzyme": "^3.11.0",
     "font-awesome": "^4.7.0",
     "lodash": "^4.17.15",
     "lodash.uniqueid": "^4.0.1",
