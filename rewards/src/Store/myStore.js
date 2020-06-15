@@ -1,7 +1,7 @@
 import { createStore } from 'redux';
 import actions from '../actions/saveState'
 import reducer from '../reducers/initStore'
-
+let myStorage = window.localStorage;
 // Creating the default store values
 var uniqueId = require('lodash.uniqueid');
 let State = [];
@@ -23,7 +23,15 @@ State.push(C3);
 State.push(C4);
 State.push(C5);
 
-// init store
+
 const store = createStore(reducer)
-store.dispatch(actions(State))
+// Reads from local Storage if a save has already been made
+var myState = localStorage.getItem('myState');
+console.log(myState)
+if (myState === null) {
+    store.dispatch(actions(State))
+} else {
+    store.dispatch(actions(JSON.parse(window.localStorage.getItem('myState'))));
+}
+
 export default store;
